@@ -1,0 +1,20 @@
+{
+  "name": "orders-products",
+  "private": true,
+  "description": "Task runner: единая точка входа для всех команд проекта (npm run <команда> из корня)",
+  "scripts": {
+    "setup": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:mock": "npm --prefix frontend run dev:mock",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "analyze": "npm --prefix frontend run analyze",
+    "lint": "npm --prefix frontend run lint",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "test:e2e": "npm --prefix frontend run e2e",
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "up": "docker compose up --build",
+    "down": "docker compose down"
+  }
+}

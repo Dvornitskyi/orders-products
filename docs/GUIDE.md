@@ -9,10 +9,10 @@
 
 ```
 db/init.sql            ← база данных
-backend/src/*          ← сервер (REST, JWT, WebSocket)
+backend/src/*          ← сервер (REST, GraphQL, JWT, WebSocket, события)
 frontend/src/*         ← интерфейс
 frontend/tests/*       ← unit-тесты фронтенда
-frontend/mock/*        ← тестовый API для запуска одного фронтенда (этап 1)
+frontend/mock/dev.mjs   ← запуск «бэкенд в памяти + фронтенд» (этап 1)
 Dockerfile, compose    ← упаковка
 ```
 
@@ -25,8 +25,10 @@ Dockerfile, compose    ← упаковка
 ```
 
 Работа шла в два этапа:
-1. **Фронтенд отдельно** (`npm run dev:mock`): интерфейс с тестовым API в памяти, без Docker и базы. См. `STAGE1.md`.
-2. **Весь стек в Docker** (`docker compose up --build`): MySQL + настоящий бэкенд + фронтенд. Фронтенд при этом не меняется, потому что тестовый API отдаёт те же URL и тот же JSON.
+1. **Без Docker и базы** (`npm run dev:mock`): настоящий бэкенд с данными в памяти + фронтенд. См. `STAGE1.md`.
+2. **Весь стек в Docker** (`docker compose up --build`): MySQL + бэкенд + фронтенд. Фронтенд при этом не меняется.
+
+Уровень Middle (GraphQL, Web Workers, PWA, EDA, оптимизация, task runners, e2e) описан отдельно: `docs/MIDDLE.md`.
 
 ---
 
@@ -39,22 +41,22 @@ Dockerfile, compose    ← упаковка
 | Требование ТЗ | Где реализовано |
 |---|---|
 | Глобальное состояние (Redux) | `store/` — срезы `auth`, `orders`, `products`, `search` |
-| Компонентный подход | `components/` — каждый блок интерфейса отдельный компонент |
+| Компонентный подход | `components/` — каждый блок интерфейса отдельный компонент, папки по назначению (layout, ui, orders, products, system ...) |
 | Роутинг | Next.js App Router: `app/orders`, `app/products`, `app/stats`, `app/map`, `app/users`, `app/settings`, `app/login` |
 | Анимации переходов | `app/template.tsx` + `@keyframes page-in` в `globals.css`; панель прихода (`slide-in`), попап (`pop`) |
 | ES6 | стрелочные функции, spread (`{...cur, value}`), шаблонные строки, деструктуризация — по всему коду |
-| WebSocket-счётчик | `backend/src/index.ts` (Socket.io) + `components/TopMenu.tsx` |
+| WebSocket-счётчик | `backend/src/socket.ts` (Socket.io) + `components/layout/TopMenu.tsx` |
 | Вёрстка по скринам | `globals.css` (БЭМ) + Bootstrap |
-| Navigation Menu | `components/NavMenu.tsx` |
-| TopMenu: дата, время, счётчик | `components/TopMenu.tsx` |
+| Navigation Menu | `components/layout/NavMenu.tsx` |
+| TopMenu: дата, время, счётчик | `components/layout/TopMenu.tsx` |
 | Orders: открытие рядом, закрытие, 2 формата дат, суммы в 2 валютах, попап удаления | `OrdersView.tsx`, `utils/format.ts`, `utils/totals.ts`, `ConfirmModal.tsx` |
 | Products: фильтр по типу, все поля | `ProductsView.tsx`, `store/productsSlice.ts` |
-| REST | `api/client.ts` (fetch) ↔ `backend/src/index.ts` |
+| REST | `api/client.ts` (fetch) ↔ `backend/src/app.ts` |
 | Валидация форм | `validation/` (клиент) + `backend/src/validate.ts` (сервер) |
 | Docker, README, схема БД | `docker-compose.yml`, `README.md`, `db/init.sql` |
 | **Junior+:** TypeScript | весь код `.ts/.tsx`, `strict: true` |
 | SSR (Next.js) | `app/*/page.tsx` — серверные компоненты, сами загружающие данные |
-| Unit-тесты | 5 в backend + 43 во frontend (Vitest) |
+| Unit-тесты | 19 в backend (вместе с интеграционными) + 57 во frontend (Vitest) |
 | i18n | `i18n/` — RU / UA / EN, переводы в JSON |
 | JWT | `backend/src/auth.ts`, `store/authSlice.ts`, `utils/jwt.ts` |
 | Web Storage | `utils/storage.ts` — токен и язык в `localStorage` |
@@ -67,7 +69,7 @@ Dockerfile, compose    ← упаковка
 - Продукт ссылается на приход через `order`, а в `app.js` геттер `products` отдавал *все* продукты. Мы строим связь по `order_id`.
 - Фильтр в тексте ТЗ — «1 селект», а на макете их два (Тип и Спецификация). Реализованы оба: это включает требование из текста.
 - Мелкий формат даты на макете: «04 / 12» над «06 / Апр / 2017», где 04 — номер месяца. Сделано так же.
-- Типы продуктов (Monitors, Keyboards, Mice) приходят из данных и не переводятся: переведён интерфейс, а не содержимое.
+- Типы продуктов (Monitors, Keyboards, Mice) в базе остаются английскими, а показываются переведёнными: словарь `productTypes` в JSON-файлах, функция `typeLabel` из `useI18n()`. В запросах и фильтрах используется исходное значение, переводится только подпись. Неизвестный тип выводится как есть. Поиск находит и по переводу («мыши»).
 
 **В видео:** покажите PDF и таблицу выше: «вот требования, вот где они закрыты».
 
@@ -99,10 +101,14 @@ Dockerfile, compose    ← упаковка
 | Файл | Ответственность |
 |---|---|
 | `db.ts` | пул подключений к MySQL; `waitForDb` ждёт, пока база стартует в Docker |
-| `repo.ts` | все SQL-запросы; превращает строки БД (`serial_number`) в формат ТЗ (`serialNumber`, `price: [...]`) |
+| `types.ts` | типы данных и интерфейс `Repo` (что умеет хранилище) |
+| `repo.mysql.ts` | все SQL-запросы; превращает строки БД (`serial_number`) в формат ТЗ (`serialNumber`, `price: [...]`) |
+| `repo.memory.ts` | то же самое в памяти (для `dev:mock` и тестов) |
 | `validate.ts` | проверка тела запросов (чистая функция — легко тестируется) |
 | `auth.ts` | вход (bcrypt + JWT) и middleware `requireAuth` |
-| `index.ts` | маршруты REST + Socket.io + запуск |
+| `app.ts` | маршруты REST (+ подключение GraphQL, см. `graphql.ts`) |
+| `events.ts`, `socket.ts` | шина событий и рассылка через Socket.io (Middle) |
+| `index.ts` | сборка частей и запуск |
 
 **Важные решения.**
 - SQL только с параметрами (`?`) — защита от SQL-инъекций. Фильтры по типу и спецификации собираются в `WHERE` только из реально заданных значений.
@@ -249,7 +255,7 @@ Dockerfile, compose    ← упаковка
 
 ## 13. Unit-тесты (Vitest)
 
-`npm test` в `backend` (5 тестов) и `frontend` (43 теста). Тесты фронтенда лежат отдельно от кода, в `frontend/tests/` (структура повторяет `src/`).
+`npm test` в `backend` (19 тестов) и `frontend` (57 тестов). Тесты фронтенда лежат отдельно от кода, в `frontend/tests/` (структура повторяет `src/`).
 
 | Файл тестов | Что проверяет |
 |---|---|
@@ -379,4 +385,4 @@ curl 'localhost:4000/api/products?type=Monitors&specification=Specification%201'
 
 ## 20. Что дальше (Middle и Middle+)
 
-Уровень Middle добавит GraphQL, Web Workers, PWA, Event-Driven Architecture, оптимизацию фронтенда, npm-скрипты (task runners), интеграционные и функциональные тесты. Именно функциональные тесты (Playwright), которыми мы проверяли этот проект в браузере, станут частью репозитория. Middle+ — микросервисы, микрофронтенды и WebAssembly.
+Уровень Middle уже сделан: GraphQL, Web Workers, PWA, Event-Driven Architecture, оптимизация фронтенда, npm-скрипты (task runners), интеграционные и функциональные тесты. См. `docs/MIDDLE.md`. Middle+ — микросервисы, микрофронтенды и WebAssembly.

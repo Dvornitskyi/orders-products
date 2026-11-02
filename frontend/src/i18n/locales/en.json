@@ -81,6 +81,8 @@
   "currency": "Currency",
   "mapEmpty": "No orders with coordinates",
   "mapHint": "Markers show orders that have coordinates",
+  "statsByWorker": "Chart data was calculated by a Web Worker (separate thread, the UI is not blocked)",
+  "statsByMain": "Chart data was calculated on the main thread (Web Worker unavailable)",
   "months": [
     "Jan",
     "Feb",
@@ -103,5 +105,25 @@
     "Thursday",
     "Friday",
     "Saturday"
-  ]
+  ],
+  "productTypes": {
+    "Monitors": "Monitors",
+    "Keyboards": "Keyboards",
+    "Mice": "Mice",
+    "Tablets": "Tablets",
+    "Laptops": "Laptops",
+    "Headphones": "Headphones",
+    "Printers": "Printers"
+  },
+  "sortBy": "Sort by:",
+  "sortNone": "Default",
+  "sortDate": "By date",
+  "sortCount": "By number of products",
+  "sortTotal": "By total",
+  "sortTitle": "By title",
+  "sortCondition": "New / Used",
+  "sortPrice": "By price",
+  "sortGuarantee": "By warranty",
+  "sortAsc": "Ascending",
+  "sortDesc": "Descending"
 }

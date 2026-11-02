@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { keepUnfixed, validateLogin, type Errors, type LoginValues } from '@/validation';
 import { login } from '@/store/authSlice';
 import { useAppDispatch } from '@/store/hooks';
-import TextField from './TextField';
+import TextField from '@/components/ui/TextField';
 
 export default function LoginForm() {
   const { t } = useI18n();

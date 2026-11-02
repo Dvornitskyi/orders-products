@@ -3,20 +3,23 @@ import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useI18n } from '@/i18n/I18nProvider';
 import { currencyLabel, formatMoney } from '@/utils/format';
-import { totalsChart, typesChart } from '@/utils/stats';
+import { useStatsData } from '@/hooks/useStatsData';
 import type { Order } from '@/types';
 
 const ROW_HEIGHT = 34; // px на один приход
 const COLORS = ['#7cb342', '#2d3a45', '#f4a63a', '#4a90b8', '#b8566b', '#8a99a6'];
 
 export default function StatsView({ orders }: { orders: Order[] }) {
-  const { t } = useI18n();
+  const { t, typeLabel } = useI18n();
   const currencies = [...new Set(orders.flatMap((o) => o.products.flatMap((p) => p.price.map((x) => x.symbol))))];
   const [symbol, setSymbol] = useState(currencies.includes('UAH') ? 'UAH' : currencies[0] ?? 'UAH');
-  const bars = totalsChart(orders, symbol);
-  const pie = typesChart(orders);
+  const { data, engine } = useStatsData(orders, symbol); // считает Web Worker
+  if (!data) return <p className="text-muted">{t('loading')}</p>;
+  const { bars } = data;
+  const pie = data.pie.map((x) => ({ ...x, name: typeLabel(x.name) })); // типы продуктов на языке интерфейса
 
   return (
+    <>
     <div className="stats">
       <div className="stats__card">
         <div className="stats__head">
@@ -57,5 +60,7 @@ export default function StatsView({ orders }: { orders: Order[] }) {
         </div>
       </div>
     </div>
+    <p className="stats__note">{t(engine === 'worker' ? 'statsByWorker' : 'statsByMain')}</p>
+    </>
   );
 }

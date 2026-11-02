@@ -4,7 +4,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import type { Order } from '@/types';
 
 // Leaflet работает с window, поэтому на сервере не рендерится (ssr: false) и загружается отдельным чанком
-const MapView = dynamic(() => import('./MapView'), { ssr: false, loading: () => <Loading /> });
+const MapView = dynamic(() => import('@/components/map/MapView'), { ssr: false, loading: () => <Loading /> });
 function Loading() { const { t } = useI18n(); return <p className="text-muted">{t('loading')}</p>; }
 
 export default function MapLoader({ orders, failed }: { orders: Order[]; failed: boolean }) {

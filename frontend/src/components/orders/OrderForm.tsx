@@ -5,8 +5,8 @@ import { keepUnfixed, toNumber, validateOrder, type Errors, type OrderValues } f
 import { useFailure } from '@/hooks/useFailure';
 import { useAppDispatch } from '@/store/hooks';
 import { createOrder } from '@/store/ordersSlice';
-import Modal from './Modal';
-import TextField from './TextField';
+import Modal from '@/components/ui/Modal';
+import TextField from '@/components/ui/TextField';
 
 export default function OrderForm({ onClose }: { onClose: () => void }) {
   const { t } = useI18n();

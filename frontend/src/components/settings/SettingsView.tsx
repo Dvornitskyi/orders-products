@@ -5,7 +5,7 @@ import { formatLong, pad } from '@/utils/format';
 import { tokenExpiresAt } from '@/utils/jwt';
 import { logout } from '@/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import LanguageSwitcher from './LanguageSwitcher';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 export default function SettingsView() {
   const { t, months } = useI18n();

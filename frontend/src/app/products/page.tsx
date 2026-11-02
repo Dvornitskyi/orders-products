@@ -1,4 +1,4 @@
-import ProductsView from '@/components/ProductsView';
+import ProductsView from '@/components/products/ProductsView';
 import { api } from '@/api';
 
 export const dynamic = 'force-dynamic';

@@ -20,4 +20,10 @@ describe('search', () => {
     expect(matchesOrder(order, 'dell')).toBe(true);
     expect(matchesOrder(order, 'nothing')).toBe(false);
   });
+  it('finds by the translated product type when a translator is given', () => {
+    const label = (raw: string) => (raw === 'Monitors' ? 'Мониторы' : raw);
+    expect(matchesProduct(product, 'монитор')).toBe(false);
+    expect(matchesProduct(product, 'монитор', label)).toBe(true);
+    expect(matchesOrder(order, 'мониторы', label)).toBe(true);
+  });
 });

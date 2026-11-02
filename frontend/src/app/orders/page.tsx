@@ -1,4 +1,4 @@
-import OrdersView from '@/components/OrdersView';
+import OrdersView from '@/components/orders/OrdersView';
 import { api } from '@/api';
 
 export const dynamic = 'force-dynamic'; // данные всегда свежие, страница рендерится на сервере при каждом запросе
