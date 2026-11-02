@@ -1,3 +1,3 @@
-import UsersView from '@/components/UsersView';
+import UsersView from '@/components/users/UsersView';
 
 export default function UsersPage() { return <UsersView />; }

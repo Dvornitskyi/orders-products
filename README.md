@@ -1,19 +1,19 @@
 # Orders & Products
 
-SPA-приложение «Orders & Products» — учёт приходов (Orders) и продуктов (Products). Уровень **Junior+** тестового задания «JavaScript / ReactJS».
+SPA-приложение «Orders & Products» — учёт приходов (Orders) и продуктов (Products). Уровни **Junior+** и **Middle** тестового задания «JavaScript / ReactJS».
 
 ## Что умеет приложение
 
-| Раздел           | Возможности                                                                                                                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Приход**       | Список приходов: название, количество продуктов, дата в двух форматах, сумма в USD и UAH. Клик по приходу открывает рядом панель с продуктами (её можно закрыть). Добавление прихода, добавление и удаление продуктов, удаление прихода через попап подтверждения. |
-| **Продукты**     | Все продукты: название, тип, даты гарантии в двух форматах, цена в двух валютах, название прихода. Фильтры по типу и по спецификации.                                                                                                                              |
-| **Статистика**   | Столбчатая диаграмма сумм приходов (с выбором валюты, длинные названия обрезаются, при большом числе приходов блок прокручивается) и круговая диаграмма продуктов по типам.                                                                                        |
-| **Карта**        | Приходы с координатами на карте (Leaflet + OpenStreetMap).                                                                                                                                                                                                         |
-| **Пользователи** | Список пользователей (доступен после входа).                                                                                                                                                                                                                       |
-| **Настройки**    | Язык интерфейса, данные аккаунта, срок действия сессии, выход.                                                                                                                                                                                                     |
-| **Верхнее меню** | Дата и время в реальном времени, счётчик активных вкладок (WebSocket), поиск по приходам и продуктам, переключатель языка RU / UA / EN, вход и выход.                                                                                                              |
-| **Доступ**       | Смотреть данные можно без входа. Создавать и удалять — только после входа (JWT). Демо-пользователь: `admin` / `admin123`.                                                                                                                                          |
+| Раздел | Возможности |
+|---|---|
+| **Приход** | Список приходов: название, количество продуктов, дата в двух форматах, сумма в USD и UAH. Клик по приходу открывает рядом панель с продуктами (её можно закрыть). Добавление прихода, добавление и удаление продуктов, удаление прихода через попап подтверждения. Сортировка по дате, количеству продуктов и сумме. |
+| **Продукты** | Все продукты: название, тип, даты гарантии в двух форматах, цена в двух валютах, название прихода. Фильтры по типу и по спецификации. Сортировка по названию, состоянию (новый / Б/У), цене, дате прихода и сроку гарантии. |
+| **Статистика** | Столбчатая диаграмма сумм приходов (с выбором валюты, длинные названия обрезаются, при большом числе приходов блок прокручивается) и круговая диаграмма продуктов по типам. |
+| **Карта** | Приходы с координатами на карте (Leaflet + OpenStreetMap). |
+| **Пользователи** | Список пользователей (доступен после входа). |
+| **Настройки** | Язык интерфейса, данные аккаунта, срок действия сессии, выход. |
+| **Верхнее меню** | Дата и время в реальном времени, счётчик активных вкладок (WebSocket), поиск по приходам и продуктам, переключатель языка RU / UA / EN, вход и выход. |
+| **Доступ** | Смотреть данные можно без входа. Создавать и удалять — только после входа (JWT). Демо-пользователь: `admin` / `admin123`. |
 
 ## Технологии
 
@@ -21,28 +21,44 @@ React 18 · **Next.js 14 (SSR)** · **TypeScript** · Redux Toolkit · Bootstrap
 Express · MySQL 8 · **JWT** (jsonwebtoken, bcrypt) · **i18n** (собственная, переводы в JSON, RU/UA/EN) · **Web Storage** (localStorage) ·
 **Lazy Loading** (`next/dynamic`, `loading="lazy"`) · **Charts** (Recharts) · **Maps** (Leaflet) · **Unit-тесты** (Vitest) · Docker.
 
+**Middle:** **GraphQL** (graphql-yoga) · **Web Workers** · **PWA** (manifest + service worker) · **Event-Driven Architecture** (шина событий + Socket.io) · оптимизация фронтенда (memo, useDeferredValue, анализ бандла) · **Task Runners** (npm-скрипты) · интеграционные (supertest) и функциональные (Playwright) тесты. Подробно: [docs/MIDDLE.md](docs/MIDDLE.md).
+
 ## Структура
 
 ```
 orders-products/
 ├── backend/             # Express + TypeScript: REST API, JWT, Socket.io
-│   └── src/             #   index.ts (маршруты), repo.ts (SQL), auth.ts, validate.ts, db.ts
+│   ├── src/             #   app.ts (REST), graphql.ts, events.ts (шина), socket.ts, auth.ts, validate.ts,
+│   │                    #   repo.mysql.ts / repo.memory.ts (две реализации хранилища), db.ts, index.ts
+│   └── tests/           #   интеграционные тесты (supertest) и валидация
 ├── frontend/            # Next.js (App Router)
 │   ├── src/
 │   │   ├── app/         #   страницы: orders, products, stats, map, users, settings, login + layout/template
-│   │   ├── components/  #   UI-компоненты
+│   │   ├── components/  #   компоненты, разложенные по назначению:
+│   │   │   ├── layout/    шапка и меню (TopMenu, NavMenu, LanguageSwitcher)
+│   │   │   ├── ui/        переиспользуемые мелочи (Modal, TextField, Money ...)
+│   │   │   ├── orders/    приходы: список, формы, строка продукта
+│   │   │   ├── products/  продукты: список и строка
+│   │   │   ├── stats/ map/ users/ settings/ auth/   по одной странице
+│   │   │   └── system/    невидимые служебные (service worker, живые обновления, восстановление входа)
 │   │   ├── store/       #   Redux: срезы (auth, orders, products, search), хуки, провайдер
 │   │   ├── i18n/        #   переводы (locales/*.json) и провайдер языка
 │   │   ├── api/         #   запросы к серверу (fetch) и ошибки API
 │   │   ├── types/       #   общие типы (Order, Product, User ...)
 │   │   ├── utils/       #   чистые функции: даты/деньги, суммы, поиск, jwt, storage
 │   │   ├── hooks/       #   собственные React-хуки
+│   │   ├── workers/     #   Web Worker для данных статистики
+│   │   ├── realtime/    #   общий Socket.io клиент
 │   │   └── validation/  #   правила валидации форм
+│   ├── public/          # иконки PWA, sw.js (service worker), offline.html
 │   ├── tests/           # unit-тесты (структура повторяет src/)
-│   └── mock/            # тестовый API в памяти — только для запуска фронтенда без бэкенда
+│   ├── e2e/             # функциональные тесты (Playwright)
+│   └── mock/dev.mjs     # запуск «бэкенд в памяти + фронтенд» одной командой
 ├── db/init.sql          # схема БД + тестовые данные
-├── docs/GUIDE.md        # пошаговое руководство: что, зачем и как сделано
-├── STAGE1.md            # запуск одного фронтенда (без Docker и базы)
+├── docs/GUIDE.md        # пошаговое руководство по уровню Junior+
+├── docs/MIDDLE.md       # уровень Middle: GraphQL, Workers, PWA, EDA, оптимизация, тесты
+├── package.json         # task runner: общие команды (setup, check, test:e2e ...)
+├── STAGE1.md            # запуск без Docker и без базы
 └── docker-compose.yml
 ```
 
@@ -65,19 +81,18 @@ docker compose up --build
 
 ## Быстрый старт только фронтенда (без Docker и базы)
 
-Нужен только Node.js 20.19+. Подробности — в [STAGE1.md](STAGE1.md).
+Нужен только Node.js 20.19+ (или 22+). Подробности — в [STAGE1.md](STAGE1.md).
 
 ```bash
-cd frontend
-npm install
-npm run dev:mock    # фронтенд + тестовый API с данными в памяти
+npm run setup       # из корня: npm install в backend и frontend
+npm run dev:mock    # бэкенд с данными в памяти + фронтенд
 ```
 
-Откройте http://localhost:3000. В этом режиме счётчик вкладок (WebSocket) отключён.
+Откройте http://localhost:3000. Работает всё, включая GraphQL (http://localhost:4000/api/graphql) и WebSocket; данные не сохраняются между запусками.
 
 ## Запуск без Docker (режим разработки)
 
-Нужно: **Node.js 20.19+** и MySQL 8. Проще всего поднять только базу в Docker:
+Нужно: **Node.js 20.19+ или 22+** и MySQL 8. Проще всего поднять только базу в Docker:
 
 ```bash
 docker compose up db            # MySQL на localhost:3306, схема и данные загружаются автоматически
@@ -101,44 +116,50 @@ npm run dev
 
 ## Тесты и проверки
 
+Из корня проекта (task runner, см. [docs/MIDDLE.md](docs/MIDDLE.md)):
+
 ```bash
-cd backend  && npm test && npm run typecheck     # валидация запросов
-cd frontend && npm test && npm run typecheck     # форматы, суммы, поиск, валидация, JWT, i18n, Redux
-cd frontend && npm run build                     # production-сборка
+npm run check       # линтер + типы + unit/интеграционные тесты (19 backend + 57 frontend)
+npm run test:e2e    # 13 функциональных тестов в браузере (первый раз: cd frontend && npx playwright install chromium)
+npm run build       # production-сборка
+npm run analyze     # карта размера бандла
 ```
 
-Тесты фронтенда лежат отдельно, в `frontend/tests/`.
+Тесты лежат отдельно от кода: `frontend/tests/`, `backend/tests/`, `frontend/e2e/`.
 
 ## Переменные окружения
 
-| Переменная                                                | Где      | По умолчанию                                           | Назначение                                                                                |
-| --------------------------------------------------------- | -------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | backend  | `localhost`, `3306`, `root`, `root`, `orders_products` | подключение к MySQL                                                                       |
-| `JWT_SECRET`                                              | backend  | `dev-secret-change-me`                                 | ключ подписи токенов. **Измените на сервере!**                                            |
-| `ADMIN_LOGIN`, `ADMIN_PASSWORD`                           | backend  | `admin`, `admin123`                                    | демо-пользователь, создаётся при первом старте                                            |
-| `PORT`                                                    | backend  | `4000`                                                 | порт API                                                                                  |
-| `INTERNAL_API_URL`                                        | frontend | `http://localhost:4000`                                | адрес API для SSR и прокси `/api` (в Docker — `http://backend:4000`)                      |
-| `NEXT_PUBLIC_SOCKET_URL`                                  | frontend | `http://localhost:4000`                                | адрес WebSocket **для браузера** (вшивается при сборке; значение `off` отключает счётчик) |
+| Переменная | Где | По умолчанию | Назначение |
+|---|---|---|---|
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | backend | `localhost`, `3306`, `root`, `root`, `orders_products` | подключение к MySQL |
+| `JWT_SECRET` | backend | `dev-secret-change-me` | ключ подписи токенов. **Измените на сервере!** |
+| `ADMIN_LOGIN`, `ADMIN_PASSWORD` | backend | `admin`, `admin123` | демо-пользователь, создаётся при первом старте |
+| `PORT` | backend | `4000` | порт API |
+| `STORAGE` | backend | `mysql` | значение `memory` — данные в памяти, без БД (для `dev:mock` и тестов) |
+| `INTERNAL_API_URL` | frontend | `http://localhost:4000` | адрес API для SSR и прокси `/api` (в Docker — `http://backend:4000`) |
+| `NEXT_PUBLIC_SOCKET_URL` | frontend | `http://localhost:4000` | адрес WebSocket **для браузера** (вшивается при сборке; значение `off` отключает счётчик) |
 
 Для Docker скопируйте `.env.example` в `.env` и измените значения.
 
 ## REST API
 
-| Метод и путь                             | Доступ   | Описание                                         |
-| ---------------------------------------- | -------- | ------------------------------------------------ |
-| `POST /api/auth/login`                   | открытый | `{login, password}` → `{token, login}`           |
-| `GET /api/orders`                        | открытый | приходы со вложенными продуктами                 |
-| `POST /api/orders`                       | JWT      | создать приход                                   |
-| `DELETE /api/orders/:id`                 | JWT      | удалить приход (продукты удаляются каскадом)     |
+| Метод и путь | Доступ | Описание |
+|---|---|---|
+| `POST /api/auth/login` | открытый | `{login, password}` → `{token, login}` |
+| `GET /api/orders` | открытый | приходы со вложенными продуктами |
+| `POST /api/orders` | JWT | создать приход |
+| `DELETE /api/orders/:id` | JWT | удалить приход (продукты удаляются каскадом) |
 | `GET /api/products?type=&specification=` | открытый | продукты, опционально по типу и/или спецификации |
-| `GET /api/products/types`                | открытый | список типов                                     |
-| `GET /api/products/specifications`       | открытый | список спецификаций (для второго фильтра)        |
-| `POST /api/products`                     | JWT      | создать продукт (с двумя ценами, в транзакции)   |
-| `DELETE /api/products/:id`               | JWT      | удалить продукт                                  |
-| `GET /api/users`                         | JWT      | список пользователей (без хешей паролей)         |
+| `GET /api/products/types` | открытый | список типов |
+| `GET /api/products/specifications` | открытый | список спецификаций (для второго фильтра) |
+| `POST /api/products` | JWT | создать продукт (с двумя ценами, в транзакции) |
+| `DELETE /api/products/:id` | JWT | удалить продукт |
+| `GET /api/users` | JWT | список пользователей (без хешей паролей) |
+
+**GraphQL:** `POST /api/graphql` (песочница GraphiQL по тому же адресу в браузере). Запросы `orders`, `products(type, specification)`, `productTypes`, `productSpecifications`, `users`; мутации `login`, `createOrder`, `deleteOrder`, `createProduct`, `deleteProduct`. Фронтенд получает данные через GraphQL.
 
 Защищённые запросы передают заголовок `Authorization: Bearer <token>`. Ошибки валидации возвращаются как `400 {errors: [...]}`.
-WebSocket: событие `sessions` с числом подключённых вкладок.
+WebSocket: событие `sessions` с числом подключённых вкладок и `domain-event` (создан или удалён приход или продукт) для живого обновления списков.
 
 ## Схема БД
 
@@ -173,4 +194,4 @@ docker compose up -d --build
 - Токен хранится в `localStorage` (требование задания про Web Storage). В production-проекте безопаснее `httpOnly`-cookie.
 - Статус «свободен / в ремонте» из макета в данных ТЗ отсутствует, поэтому показывается признак «новый / Б/У».
 - В тексте ТЗ указан один фильтр по типу, а в макете два (тип и спецификация) — реализованы оба.
-- Значения типов продуктов (Monitors, Keyboards, Mice) приходят из данных и не переводятся.
+- Типы продуктов (Monitors, Keyboards, Mice ...) в базе хранятся по-английски, а на экране переводятся (`productTypes` в `frontend/src/i18n/locales/*.json`). Тип, которого нет в переводах, показывается как есть. Новый тип: добавьте строку в три JSON-файла.

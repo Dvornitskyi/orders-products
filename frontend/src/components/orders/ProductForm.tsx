@@ -5,11 +5,11 @@ import { keepUnfixed, toNumber, validateProduct, type Errors, type ProductValues
 import { useFailure } from '@/hooks/useFailure';
 import { useAppDispatch } from '@/store/hooks';
 import { createProduct } from '@/store/ordersSlice';
-import Modal from './Modal';
-import TextField from './TextField';
+import Modal from '@/components/ui/Modal';
+import TextField from '@/components/ui/TextField';
 
 export default function ProductForm({ orderId, types, onClose }: { orderId: number; types: string[]; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, typeLabel } = useI18n();
   const dispatch = useAppDispatch();
   const fail = useFailure();
   const [v, setV] = useState<ProductValues>({
@@ -47,7 +47,7 @@ export default function ProductForm({ orderId, types, onClose }: { orderId: numb
         <div className="field-row">
           <TextField id="p-sn" label={t('fieldSerial')} value={v.serialNumber} onChange={set('serialNumber')} error={errors.serialNumber} />
           <TextField id="p-type" label={t('fieldType')} value={v.type} onChange={set('type')} error={errors.type} list="product-types" />
-          <datalist id="product-types">{types.map((x) => <option key={x} value={x} />)}</datalist>
+          <datalist id="product-types">{types.map((x) => <option key={x} value={x} label={typeLabel(x)} />)}</datalist>
         </div>
         <TextField id="p-spec" label={t('fieldSpec')} value={v.specification} onChange={set('specification')} />
         <div className="field-row">

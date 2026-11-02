@@ -8,6 +8,13 @@ const initialState: State = { items: [], types: [], specifications: [], type: ''
 // Фильтры по типу и спецификации: REST-запрос GET /api/products?type=...&specification=...
 export const loadProducts = createAsyncThunk('products/load', async (f: ProductFilter) => ({ f, items: await api.products(f) }));
 
+// Обновление после события с сервера: заново грузим список (с текущими фильтрами), типы и спецификации
+export const refreshProducts = createAsyncThunk('products/refresh', async (_, { getState }) => {
+  const { type, specification } = (getState() as { products: State }).products;
+  const [items, types, specifications] = await Promise.all([api.products({ type, specification }), api.productTypes(), api.productSpecifications()]);
+  return { items, types, specifications };
+});
+
 const slice = createSlice({
   name: 'products', initialState,
   reducers: {
@@ -24,6 +31,7 @@ const slice = createSlice({
     })
     // Ответ применяем, только если это ответ на ПОСЛЕДНИЙ запрос: медленный старый ответ не должен затереть новый
     .addCase(loadProducts.fulfilled, (s, a) => { if (a.meta.requestId === s.lastRequest) { s.loading = false; s.items = a.payload.items; } })
+    .addCase(refreshProducts.fulfilled, (s, a) => { s.items = a.payload.items; s.types = a.payload.types; s.specifications = a.payload.specifications; })
     .addCase(loadProducts.rejected, (s, a) => { if (a.meta.requestId === s.lastRequest) { s.loading = false; s.failed = true; } })
 });
 export const { setProducts } = slice.actions;

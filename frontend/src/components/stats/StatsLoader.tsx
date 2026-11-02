@@ -4,7 +4,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import type { Order } from '@/types';
 
 // Lazy Loading: библиотека графиков (recharts) тяжёлая — загружаем её только на этой странице и только в браузере
-const StatsView = dynamic(() => import('./StatsView'), { ssr: false, loading: () => <Loading /> });
+const StatsView = dynamic(() => import('@/components/stats/StatsView'), { ssr: false, loading: () => <Loading /> });
 function Loading() { const { t } = useI18n(); return <p className="text-muted">{t('loading')}</p>; }
 
 export default function StatsLoader({ orders, failed }: { orders: Order[]; failed: boolean }) {

@@ -1,7 +1,7 @@
 'use client';
 import { useI18n } from '@/i18n/I18nProvider';
 import type { Product } from '@/types';
-import ProductThumb from './ProductThumb';
+import ProductThumb from '@/components/ui/ProductThumb';
 
 // Строка продукта (в панели прихода и в попапе удаления)
 export default function ProductLine({ product, onDelete }: { product: Product; onDelete?: () => void }) {

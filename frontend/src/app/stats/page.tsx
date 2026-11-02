@@ -1,4 +1,4 @@
-import StatsLoader from '@/components/StatsLoader';
+import StatsLoader from '@/components/stats/StatsLoader';
 import { api } from '@/api';
 
 export const dynamic = 'force-dynamic';

@@ -8,7 +8,10 @@
     "dev:mock": "node mock/dev.mjs",
     "build": "next build",
     "start": "next start -p 3000",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "next lint",
+    "analyze": "cross-env ANALYZE=1 next build",
+    "e2e": "playwright test"
   },
   "keywords": [],
   "author": "",
@@ -28,10 +31,15 @@
     "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^14.2.35",
+    "@playwright/test": "^1.63.0",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^22.20.5",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "cross-env": "^10.1.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"
   }

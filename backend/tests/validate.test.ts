@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateOrder, validateProduct } from './validate';
+import { validateOrder, validateProduct } from '../src/validate';
 
 const product = { title: 'Dell', serialNumber: 5, type: 'Monitors', orderId: 1, priceUsd: 1, priceUah: 26, guaranteeStart: '2020-01-01', guaranteeEnd: '2021-01-01' };
 

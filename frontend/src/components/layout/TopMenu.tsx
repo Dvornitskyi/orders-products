@@ -1,15 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
 import { useI18n } from '@/i18n/I18nProvider';
+import { getSocket } from '@/realtime/socket';
 import { pad } from '@/utils/format';
 import { logout } from '@/store/authSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setQuery } from '@/store/searchSlice';
-import LanguageSwitcher from './LanguageSwitcher';
-
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? 'http://localhost:4000';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 export default function TopMenu() {
   const { t, months, weekdays } = useI18n();
@@ -28,10 +26,11 @@ export default function TopMenu() {
 
   // WebSocket: сервер рассылает количество подключённых вкладок каждый раз, когда кто-то открывает/закрывает вкладку
   useEffect(() => {
-    if (SOCKET_URL === 'off') return; // этап 1 (mock API): WebSocket-сервера ещё нет
-    const socket = io(SOCKET_URL);
-    socket.on('sessions', (n: number) => setSessions(n));
-    return () => { socket.disconnect(); };
+    const socket = getSocket();
+    if (!socket) return; // WebSocket отключён (NEXT_PUBLIC_SOCKET_URL=off)
+    const onSessions = (n: number) => setSessions(n);
+    socket.on('sessions', onSessions);
+    return () => { socket.off('sessions', onSessions); };
   }, []);
 
   return (

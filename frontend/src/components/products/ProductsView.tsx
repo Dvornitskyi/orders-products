@@ -1,22 +1,32 @@
 'use client';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
-import { formatLong, formatMonthOfYear, formatNumeric } from '@/utils/format';
 import { matchesProduct } from '@/utils/search';
 import type { Product } from '@/types';
 import { useHydrate } from '@/hooks/useHydrate';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { loadProducts, setProducts } from '@/store/productsSlice';
-import Money from './Money';
-import ProductThumb from './ProductThumb';
+import ProductRow from '@/components/products/ProductRow';
+import SortControl from '@/components/ui/SortControl';
+import { sortProducts, type Direction, type ProductSortKey } from '@/utils/sort';
 
 export default function ProductsView({ items: initial, types, specifications, failed }: { items: Product[]; types: string[]; specifications: string[]; failed: boolean }) {
   useHydrate(() => setProducts({ items: initial, types, specifications }));
-  const { t, months } = useI18n();
+  const { t, typeLabel } = useI18n();
   const dispatch = useAppDispatch();
   const { items, types: allTypes, specifications: allSpecs, type, specification, loading, failed: reloadFailed } = useAppSelector((s) => s.products);
   const query = useAppSelector((s) => s.search.query);
   // Фильтры «Тип» и «Спецификация» идут на сервер (REST), а поиск из шапки применяется к уже загруженному списку
-  const list = items.filter((p) => matchesProduct(p, query));
+  // useDeferredValue: поле поиска отвечает сразу, а тяжёлая фильтрация списка идёт «с низким приоритетом»;
+  // useMemo: фильтр пересчитывается только при смене списка или запроса
+  const deferredQuery = useDeferredValue(query);
+  const [sortKey, setSortKey] = useState<ProductSortKey>('none');
+  const [sortDir, setSortDir] = useState<Direction>('desc');
+  // порядок: фильтры на сервере → поиск из шапки → сортировка
+  const list = useMemo(
+    () => sortProducts(items.filter((p) => matchesProduct(p, deferredQuery, typeLabel)), sortKey, sortDir),
+    [items, deferredQuery, typeLabel, sortKey, sortDir]
+  );
 
   return (
     <section>
@@ -26,7 +36,7 @@ export default function ProductsView({ items: initial, types, specifications, fa
           <span className="filter__label">{t('filterType')}</span>
           <select className="form-select filter__select" value={type} onChange={(e) => dispatch(loadProducts({ type: e.target.value, specification }))}>
             <option value="">{t('allTypes')}</option>
-            {allTypes.map((x) => <option key={x} value={x}>{x}</option>)}
+            {allTypes.map((x) => <option key={x} value={x}>{typeLabel(x)}</option>)}
           </select>
         </label>
         <label className="filter">
@@ -36,6 +46,10 @@ export default function ProductsView({ items: initial, types, specifications, fa
             {allSpecs.map((x) => <option key={x} value={x}>{x}</option>)}
           </select>
         </label>
+        <SortControl value={sortKey} direction={sortDir} onChange={setSortKey} onDirection={setSortDir}
+          options={[{ value: 'none', label: t('sortNone') }, { value: 'title', label: t('sortTitle') },
+            { value: 'condition', label: t('sortCondition') }, { value: 'price', label: t('sortPrice') },
+            { value: 'date', label: t('sortDate') }, { value: 'guarantee', label: t('sortGuarantee') }]} />
       </div>
 
       {(failed || reloadFailed) && <div className="alert alert-warning">{t('loadFailed')}</div>}
@@ -43,23 +57,7 @@ export default function ProductsView({ items: initial, types, specifications, fa
 
       <div className="products" aria-busy={loading}>
         <ul className={`products__list ${loading ? 'products__list--loading' : ''}`}>
-          {list.map((p) => (
-            <li key={p.id} className="product-row">
-              <span className={`dot ${p.isNew ? 'dot--free' : ''}`} />
-              <ProductThumb photo={p.photo} />
-              <div className="product-row__name"><div className="product-line__title">{p.title}</div><small className="product-line__sn">SN-{p.serialNumber}</small></div>
-              <div className="product-row__type">{p.type}</div>
-              <div className="product-row__guarantee">
-                <div><small>{t('guaranteeFrom')}</small> {formatNumeric(p.guarantee.start)} <small className="product-row__alt">{formatLong(p.guarantee.start, months)}</small></div>
-                <div><small>{t('guaranteeTo')}</small> {formatNumeric(p.guarantee.end)} <small className="product-row__alt">{formatLong(p.guarantee.end, months)}</small></div>
-              </div>
-              <div>{p.isNew ? t('new') : t('used')}</div>
-              <Money totals={p.price.map((x) => ({ symbol: x.symbol, value: x.value, isDefault: x.isDefault === 1 }))
-                .sort((a, b) => Number(a.isDefault) - Number(b.isDefault))} />
-              <div className="product-row__order">{p.orderTitle}</div>
-              <div className="order-row__date"><small>{formatMonthOfYear(p.date)}</small>{formatLong(p.date, months)}</div>
-            </li>
-          ))}
+          {list.map((p) => <ProductRow key={p.id} p={p} />)}
         </ul>
       </div>
     </section>

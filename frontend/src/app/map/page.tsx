@@ -1,4 +1,4 @@
-import MapLoader from '@/components/MapLoader';
+import MapLoader from '@/components/map/MapLoader';
 import { api } from '@/api';
 
 export const dynamic = 'force-dynamic';

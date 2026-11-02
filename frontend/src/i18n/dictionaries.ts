@@ -15,6 +15,11 @@ export type MessageKey = { [K in keyof Messages]: Messages[K] extends string ? K
 export const dictionaries: Record<Locale, Messages> = { ru, uk, en };
 export const LOCALE_LABELS: Record<Locale, string> = { ru: 'RU', uk: 'UA', en: 'EN' };
 
+// Название типа продукта на языке интерфейса. В базе и в запросах остаётся исходное значение (Monitors),
+// переводится только то, что видит пользователь. Неизвестный тип показываем как есть.
+export const productTypeLabel = (locale: Locale, raw: string): string =>
+  (dictionaries[locale].productTypes as Record<string, string>)[raw] ?? raw;
+
 // Подбирает слово "продукт/продукта/продуктов" по правилам языка
 export function pluralKey(n: number, locale: Locale): MessageKey {
   const cat = new Intl.PluralRules(locale === 'uk' ? 'uk' : locale).select(n);

@@ -133,6 +133,7 @@ a { color: inherit; }
 .stats__card { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 20px 24px; }
 .stats__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .stats__title { font-size: 1rem; font-weight: 700; margin: 0 0 12px; }
+.stats__note { margin: 14px 0 0; font-size: .78rem; color: var(--muted); }
 .stats__chart { height: 320px; }
 .stats__chart--scroll { height: auto; max-height: 460px; overflow-y: auto; }
 .map { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }

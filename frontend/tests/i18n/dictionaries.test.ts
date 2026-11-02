@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dictionaries, LOCALES, pluralKey } from '@/i18n/dictionaries';
+import { dictionaries, LOCALES, pluralKey, productTypeLabel } from '@/i18n/dictionaries';
 
 describe('dictionaries', () => {
   it('have identical keys in every language', () => {
@@ -19,5 +19,15 @@ describe('dictionaries', () => {
     expect(pluralKey(11, 'ru')).toBe('productsMany');
     expect(pluralKey(1, 'en')).toBe('productsOne');
     expect(pluralKey(2, 'en')).toBe('productsOther');
+  });
+  it('have the same product types in every language', () => {
+    const base = Object.keys(dictionaries.ru.productTypes).sort();
+    for (const l of LOCALES) expect(Object.keys(dictionaries[l].productTypes).sort()).toEqual(base);
+  });
+  it('translates product types and keeps unknown ones as is', () => {
+    expect(productTypeLabel('ru', 'Mice')).toBe('Мыши');
+    expect(productTypeLabel('uk', 'Keyboards')).toBe('Клавіатури');
+    expect(productTypeLabel('en', 'Monitors')).toBe('Monitors');
+    expect(productTypeLabel('ru', 'Gadgets')).toBe('Gadgets');
   });
 });
